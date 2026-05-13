@@ -225,6 +225,7 @@
 
     .task:hover {
       background: #303030;
+      transform: translateX(4px);
     }
 
     .task.completed {
@@ -332,20 +333,28 @@
       justify-content: center;
       opacity: 0;
       transition: all 0.2s ease;
+      transform: scale(0.8);
     }
 
     .task:hover .delete-btn {
       opacity: 1;
+      transform: scale(1);
     }
 
     .delete-btn:hover {
-      background: #ef444420;
+      background: #ef444440;
+      transform: scale(1.1) !important;
     }
 
     .delete-btn svg {
       width: 18px;
       height: 18px;
       fill: var(--danger);
+      transition: transform 0.2s ease;
+    }
+
+    .delete-btn:hover svg {
+      transform: rotate(90deg);
     }
 
     .empty-state {
@@ -353,6 +362,27 @@
       padding: 40px 20px;
       color: var(--text-secondary);
       font-size: 15px;
+      animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .counter {
+      font-size: 14px;
+      color: var(--text-secondary);
+      transition: transform 0.2s ease, color 0.2s ease;
+      display: inline-block;
+    }
+
+    .counter.pulse {
+      animation: counterPulse 0.3s ease;
+    }
+
+    @keyframes counterPulse {
+      50% { transform: scale(1.2); color: var(--primary); }
     }
 
     .task.completed .checkbox {
@@ -396,6 +426,9 @@
     function updateCounter() {
       const left = tasks.filter(t => !t.completed).length;
       counter.textContent = `${left} item${left !== 1 ? 's' : ''} left`;
+      counter.classList.remove('pulse');
+      void counter.offsetWidth;
+      counter.classList.add('pulse');
     }
 
     function renderTasks() {
@@ -406,7 +439,7 @@
       }
 
       taskList.innerHTML = tasks.map((task, index) => `
-        <div class="task ${task.completed ? 'completed' : ''}" data-index="${index}">
+        <div class="task ${task.completed ? 'completed' : ''}" data-index="${index}" style="animation-delay: ${index * 0.05}s">
           <div class="checkbox ${task.completed ? 'checked' : ''}" onclick="toggleTask(${index})">
             <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
           </div>
@@ -428,11 +461,28 @@
 
     function addTask() {
       const text = taskInput.value.trim();
-      if (!text) return;
+      if (!text) {
+        taskInput.classList.add('shake');
+        setTimeout(() => taskInput.classList.remove('shake'), 400);
+        return;
+      }
 
       tasks.push({ text, completed: false });
       saveTasks();
+
+      const wasEmpty = taskList.querySelector('.empty-state');
       renderTasks();
+
+      const newTask = taskList.querySelector('.task:last-child');
+      if (newTask) {
+        newTask.style.animation = 'none';
+        newTask.offsetHeight;
+        newTask.style.animation = 'slideIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards';
+      }
+
+      addBtn.classList.add('adding');
+      setTimeout(() => addBtn.classList.remove('adding'), 400);
+
       taskInput.value = '';
       taskInput.focus();
     }
@@ -444,9 +494,19 @@
     }
 
     function deleteTask(index) {
-      tasks.splice(index, 1);
-      saveTasks();
-      renderTasks();
+      const taskEl = taskList.querySelector(`[data-index="${index}"]`);
+      if (taskEl) {
+        taskEl.classList.add('removing');
+        setTimeout(() => {
+          tasks.splice(index, 1);
+          saveTasks();
+          renderTasks();
+        }, 250);
+      } else {
+        tasks.splice(index, 1);
+        saveTasks();
+        renderTasks();
+      }
     }
 
     addBtn.addEventListener('click', addTask);
