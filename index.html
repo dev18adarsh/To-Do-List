@@ -70,6 +70,67 @@
       color: var(--text-primary);
     }
 
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 16px;
+      background: #262626;
+      padding: 4px;
+      border-radius: 8px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-family: 'Outfit', sans-serif;
+      color: var(--text-secondary);
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-weight: 500;
+    }
+
+    .tab:hover {
+      color: var(--text-primary);
+    }
+
+    .tab.active {
+      background: var(--primary);
+      color: var(--bg);
+    }
+
+    .tab.active:hover {
+      color: var(--bg);
+    }
+
+    .clear-completed {
+      display: none;
+      margin-top: 12px;
+      padding: 10px 16px;
+      width: 100%;
+      background: transparent;
+      border: 1px solid #ef444480;
+      border-radius: 8px;
+      color: var(--danger);
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .clear-completed.visible {
+      display: block;
+    }
+
+    .clear-completed:hover {
+      background: #ef444420;
+      border-color: var(--danger);
+    }
+
     .counter {
       font-size: 14px;
       color: var(--text-secondary);
