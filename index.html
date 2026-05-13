@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tasks</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f0f;
+      --container-bg: #1a1a1a;
+      --primary: #f59e0b;
+      --primary-light: #fbbf24;
+      --text-primary: #fafafa;
+      --text-secondary: #a3a3a3;
+      --completed: #525252;
+      --danger: #ef4444;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      background: var(--container-bg);
+      border-radius: 12px;
+      padding: 24px;
+      border: 1px solid #f59e0b20;
+      box-shadow: 0 0 40px #f59e0b10;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .title {
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .counter {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .input-area {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .input {
+      flex: 1;
+      background: #262626;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 16px;
+      font-family: 'Outfit', sans-serif;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .input::placeholder {
+      color: var(--text-secondary);
+    }
+
+    .input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px #f59e0b30;
+    }
+
+    .add-btn {
+      background: var(--primary);
+      border: none;
+      border-radius: 8px;
+      width: 48px;
+      height: 48px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .add-btn:hover {
+      background: var(--primary-light);
+      transform: scale(1.05);
+    }
+
+    .add-btn svg {
+      width: 24px;
+      height: 24px;
+      fill: var(--bg);
+    }
+
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .task-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .task-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .task-list::-webkit-scrollbar-thumb {
+      background: #404040;
+      border-radius: 3px;
+    }
+
+    .task {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #262626;
+      border-radius: 8px;
+      padding: 12px 16px;
+      transition: background 0.2s ease, transform 0.2s ease, opacity 0.3s ease;
+      animation: slideIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    .task.removing {
+      animation: slideOut 0.25s ease forwards;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes slideOut {
+      to {
+        opacity: 0;
+        transform: translateX(30px) scale(0.9);
+      }
+    }
+
+    .task:hover {
+      background: #303030;
+    }
+
+    .task.completed {
+      opacity: 0.6;
+    }
+
+    .task.completed .task-text {
+      text-decoration: line-through;
+      color: var(--text-secondary);
+    }
+
+    .checkbox {
+      width: 22px;
+      height: 22px;
+      border: 2px solid var(--text-secondary);
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .checkbox::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--primary);
+      border-radius: 4px;
+      transform: scale(0);
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .checkbox:hover {
+      border-color: var(--primary);
+      transform: scale(1.1);
+    }
+
+    .checkbox.checked {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .checkbox.checked::after {
+      transform: scale(1);
+    }
+
+    .checkbox.checked svg {
+      display: block;
+      animation: checkmarkPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes checkmarkPop {
+      0% { transform: scale(0) rotate(-45deg); }
+      50% { transform: scale(1.2) rotate(0deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
+    .checkbox svg {
+      display: none;
+      width: 14px;
+      height: 14px;
+      fill: var(--bg);
+      position: relative;
+      z-index: 1;
+    }
+
+    .task-text {
+      flex: 1;
+      font-size: 16px;
+      color: var(--text-primary);
+      word-break: break-word;
+      transition: all 0.2s ease;
+    }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: all 0.2s ease;
+    }
+
+    .task:hover .delete-btn {
+      opacity: 1;
+    }
+
+    .delete-btn:hover {
+      background: #ef444420;
+    }
+
+    .delete-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: var(--danger);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-secondary);
+      font-size: 15px;
+    }
+
+    .task.completed .checkbox {
+      background: var(--completed);
+      border-color: var(--completed);
+    }
+
+    .task.completed .checkbox.checked {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 class="title">Tasks</h1>
+      <span class="counter" id="counter">0 items left</span>
+    </div>
+    <div class="input-area">
+      <input type="text" class="input" id="taskInput" placeholder="Add a new task...">
+      <button class="add-btn" id="addBtn">
+        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+      </button>
+    </div>
+    <div class="task-list" id="taskList"></div>
+  </div>
+
+  <script>
+    const taskInput = document.getElementById('taskInput');
+    const addBtn = document.getElementById('addBtn');
+    const taskList = document.getElementById('taskList');
+    const counter = document.getElementById('counter');
+
+    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+    function saveTasks() {
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+
+    function updateCounter() {
+      const left = tasks.filter(t => !t.completed).length;
+      counter.textContent = `${left} item${left !== 1 ? 's' : ''} left`;
+    }
+
+    function renderTasks() {
+      if (tasks.length === 0) {
+        taskList.innerHTML = '<div class="empty-state">No tasks yet. Add one above!</div>';
+        updateCounter();
+        return;
+      }
+
+      taskList.innerHTML = tasks.map((task, index) => `
+        <div class="task ${task.completed ? 'completed' : ''}" data-index="${index}">
+          <div class="checkbox ${task.completed ? 'checked' : ''}" onclick="toggleTask(${index})">
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+          </div>
+          <span class="task-text">${escapeHtml(task.text)}</span>
+          <button class="delete-btn" onclick="deleteTask(${index})">
+            <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          </button>
+        </div>
+      `).join('');
+
+      updateCounter();
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function addTask() {
+      const text = taskInput.value.trim();
+      if (!text) return;
+
+      tasks.push({ text, completed: false });
+      saveTasks();
+      renderTasks();
+      taskInput.value = '';
+      taskInput.focus();
+    }
+
+    function toggleTask(index) {
+      tasks[index].completed = !tasks[index].completed;
+      saveTasks();
+      renderTasks();
+    }
+
+    function deleteTask(index) {
+      tasks.splice(index, 1);
+      saveTasks();
+      renderTasks();
+    }
+
+    addBtn.addEventListener('click', addTask);
+    taskInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') addTask();
+    });
+
+    renderTasks();
+  </script>
+</body>
+</html>
