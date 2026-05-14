@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 
 function App() {
   const [tasks, setTasks] = useState(() => {
@@ -11,6 +11,8 @@ function App() {
   const [filter, setFilter] = useState('all');
   const [newTaskPriority, setNewTaskPriority] = useState('medium');
   const [newTaskDeadline, setNewTaskDeadline] = useState('');
+  const [newTaskCategory, setNewTaskCategory] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [dragIndex, setDragIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
   const listRef = useRef(null);
@@ -18,6 +20,18 @@ function App() {
   useEffect(() => {
     localStorage.setItem('tasks', JSON.stringify(tasks));
   }, [tasks]);
+
+  const categories = useMemo(() => {
+    const set = new Set();
+    tasks.forEach(t => { if (t.category) set.add(t.category); });
+    return ['all', ...Array.from(set).sort()];
+  }, [tasks]);
+
+  useEffect(() => {
+    if (categoryFilter !== 'all' && !tasks.some(t => t.category === categoryFilter)) {
+      setCategoryFilter('all');
+    }
+  }, [tasks, categoryFilter]);
 
   const isOverdue = (deadline) => {
     if (!deadline) return false;
@@ -31,6 +45,9 @@ function App() {
     if (filter === 'active') return !task.completed;
     if (filter === 'completed') return task.completed;
     return true;
+  }).filter(task => {
+    if (categoryFilter === 'all') return true;
+    return task.category === categoryFilter;
   });
 
   const handleDragStart = (index) => {
@@ -82,11 +99,13 @@ function App() {
       text,
       completed: false,
       priority: newTaskPriority,
-      deadline: newTaskDeadline || null
+      deadline: newTaskDeadline || null,
+      category: newTaskCategory.trim() || null
     }]);
     setInputValue('');
     setNewTaskPriority('medium');
     setNewTaskDeadline('');
+    setNewTaskCategory('');
   };
 
   const toggleTask = (id) => {
@@ -136,6 +155,20 @@ function App() {
           value={newTaskDeadline}
           onChange={(e) => setNewTaskDeadline(e.target.value)}
         />
+        <input
+          type="text"
+          className="category-input"
+          placeholder="Category..."
+          value={newTaskCategory}
+          onChange={(e) => setNewTaskCategory(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && addTask()}
+          list="category-list"
+        />
+        <datalist id="category-list">
+          {categories.filter(c => c !== 'all').map(c => (
+            <option key={c} value={c} />
+          ))}
+        </datalist>
         <button className="add-btn" onClick={addTask}>
           <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
         </button>
@@ -147,6 +180,20 @@ function App() {
         <button className={`tab ${filter === 'completed' ? 'active' : ''}`} onClick={() => setFilter('completed')}>Completed</button>
       </div>
 
+      {categories.length > 1 && (
+        <div className="category-tabs">
+          {categories.map(cat => (
+            <button
+              key={cat}
+              className={`cat-tab ${categoryFilter === cat ? 'active' : ''}`}
+              onClick={() => setCategoryFilter(cat)}
+            >
+              {cat === 'all' ? 'All' : cat}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div
         className="task-list"
         ref={listRef}
@@ -156,7 +203,9 @@ function App() {
       >
         {filteredTasks.length === 0 ? (
           <div className="empty-state">
-            {filter === 'all' ? 'No tasks yet. Add one above!' : `No ${filter} tasks`}
+            {filter === 'all' && categoryFilter === 'all'
+              ? 'No tasks yet. Add one above!'
+              : `No ${filter === 'all' ? '' : filter + ' '}tasks${categoryFilter === 'all' ? '' : ' in ' + categoryFilter}`}
           </div>
         ) : (
           filteredTasks.map((task) => {
@@ -190,6 +239,9 @@ function App() {
                   <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                 </div>
                 <span className={`priority-badge ${task.priority}`}>{task.priority}</span>
+                {task.category && (
+                  <span className="category-badge">{task.category}</span>
+                )}
                 <span className="task-text">{task.text}</span>
                 {task.deadline && (
                   <span className={`deadline ${overdue ? 'overdue-date' : ''}`}>
