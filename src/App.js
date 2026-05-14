@@ -13,6 +13,7 @@ function App() {
   const [newTaskDeadline, setNewTaskDeadline] = useState('');
   const [newTaskCategory, setNewTaskCategory] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [dragIndex, setDragIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
   const [editingId, setEditingId] = useState(null);
@@ -51,6 +52,9 @@ function App() {
   }).filter(task => {
     if (categoryFilter === 'all') return true;
     return task.category === categoryFilter;
+  }).filter(task => {
+    if (!searchQuery.trim()) return true;
+    return task.text.toLowerCase().includes(searchQuery.trim().toLowerCase());
   });
 
   const handleDragStart = (index) => {
@@ -221,6 +225,21 @@ function App() {
         </div>
       )}
 
+      <div className="search-area">
+        <input
+          type="text"
+          className="search-input"
+          placeholder="Search tasks..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        {searchQuery && (
+          <button className="search-clear" onClick={() => setSearchQuery('')}>
+            <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          </button>
+        )}
+      </div>
+
       <div
         className="task-list"
         ref={listRef}
@@ -230,9 +249,11 @@ function App() {
       >
         {filteredTasks.length === 0 ? (
           <div className="empty-state">
-            {filter === 'all' && categoryFilter === 'all'
-              ? 'No tasks yet. Add one above!'
-              : `No ${filter === 'all' ? '' : filter + ' '}tasks${categoryFilter === 'all' ? '' : ' in ' + categoryFilter}`}
+            {searchQuery.trim()
+              ? `No tasks match "${searchQuery.trim()}"`
+              : filter === 'all' && categoryFilter === 'all'
+                ? 'No tasks yet. Add one above!'
+                : `No ${filter === 'all' ? '' : filter + ' '}tasks${categoryFilter === 'all' ? '' : ' in ' + categoryFilter}`}
           </div>
         ) : (
           filteredTasks.map((task) => {
