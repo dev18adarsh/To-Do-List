@@ -15,6 +15,9 @@ function App() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [dragIndex, setDragIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [editValue, setEditValue] = useState('');
+  const editRef = useRef(null);
   const listRef = useRef(null);
 
   useEffect(() => {
@@ -119,6 +122,30 @@ function App() {
   const clearCompleted = () => {
     setTasks(tasks.filter(t => !t.completed));
   };
+
+  const startEditing = (task) => {
+    setEditingId(task.id);
+    setEditValue(task.text);
+  };
+
+  const saveEdit = () => {
+    const text = editValue.trim();
+    if (!text) { setEditingId(null); setEditValue(''); return; }
+    setTasks(tasks.map(t => t.id === editingId ? { ...t, text } : t));
+    setEditingId(null);
+    setEditValue('');
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditValue('');
+  };
+
+  useEffect(() => {
+    if (editingId !== null && editRef.current) {
+      editRef.current.focus();
+    }
+  }, [editingId]);
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') addTask();
@@ -242,7 +269,22 @@ function App() {
                 {task.category && (
                   <span className="category-badge">{task.category}</span>
                 )}
-                <span className="task-text">{task.text}</span>
+                {editingId === task.id ? (
+                  <input
+                    ref={editRef}
+                    type="text"
+                    className="edit-input"
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') saveEdit();
+                      if (e.key === 'Escape') cancelEdit();
+                    }}
+                    onBlur={saveEdit}
+                  />
+                ) : (
+                  <span className="task-text" onDoubleClick={() => startEditing(task)}>{task.text}</span>
+                )}
                 {task.deadline && (
                   <span className={`deadline ${overdue ? 'overdue-date' : ''}`}>
                     {new Date(task.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
