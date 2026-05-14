@@ -99,6 +99,50 @@ body {
   box-shadow: 0 0 0 3px #f59e0b30, 0 0 20px #f59e0b20;
 }
 
+.priority-select {
+  background: #262626;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 12px 12px;
+  font-size: 14px;
+  font-family: 'Outfit', sans-serif;
+  color: var(--text-primary);
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.priority-select:focus {
+  border-color: var(--primary);
+}
+
+.priority-select option {
+  background: #262626;
+  color: var(--text-primary);
+}
+
+.date-input {
+  background: #262626;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 12px 12px;
+  font-size: 14px;
+  font-family: 'Outfit', sans-serif;
+  color: var(--text-primary);
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.date-input:focus {
+  border-color: var(--primary);
+}
+
+.date-input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+
 .input.shake {
   animation: inputShake 0.4s ease;
 }
@@ -347,6 +391,63 @@ body {
   background: var(--text-secondary);
   transition: width 0.3s ease;
   animation: strikethrough 0.3s ease forwards;
+}
+
+.priority-badge {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.priority-badge.high {
+  background: #ef444420;
+  color: #ef4444;
+  border: 1px solid #ef444440;
+}
+
+.priority-badge.medium {
+  background: #f59e0b20;
+  color: #f59e0b;
+  border: 1px solid #f59e0b40;
+}
+
+.priority-badge.low {
+  background: #22c55e20;
+  color: #22c55e;
+  border: 1px solid #22c55e40;
+}
+
+.deadline {
+  font-size: 12px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  padding: 4px 8px;
+  background: #404040;
+  border-radius: 4px;
+}
+
+.deadline.overdue-date {
+  background: #ef444420;
+  color: #ef4444;
+  border: 1px solid #ef444440;
+  animation: overduePulse 1.5s ease-in-out infinite;
+}
+
+@keyframes overduePulse {
+  0%, 100% { box-shadow: 0 0 0 0 #ef444440; }
+  50% { box-shadow: 0 0 8px 2px #ef444440; }
+}
+
+.task.overdue {
+  border-left: 3px solid #ef4444;
+  background: #ef444410;
+}
+
+.task.overdue:hover {
+  background: #ef444420;
 }
 
 @keyframes strikethrough {
