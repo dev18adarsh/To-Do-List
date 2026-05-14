@@ -315,6 +315,52 @@ body {
   transform: translateX(4px);
 }
 
+.task.dragging {
+  opacity: 0.3;
+  transform: scale(0.95);
+}
+
+.task.drag-over-top {
+  border-top: 2px solid var(--primary);
+  transform: translateX(4px);
+}
+
+.task.drag-over-bottom {
+  border-bottom: 2px solid var(--primary);
+  transform: translateX(4px);
+}
+
+.drag-handle {
+  cursor: grab;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.task:hover .drag-handle {
+  display: flex;
+}
+
+.drag-handle:hover {
+  background: #404040;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.drag-handle svg {
+  width: 16px;
+  height: 16px;
+  fill: var(--text-secondary);
+  pointer-events: none;
+}
+
 .task.completed {
   opacity: 0.6;
 }

@@ -1,6 +1,4 @@
-import React, { useState, useEffect } from 'react';
-
-const priorityOrder = { high: 0, medium: 1, low: 2 };
+import React, { useState, useEffect, useRef } from 'react';
 
 function App() {
   const [tasks, setTasks] = useState(() => {
@@ -13,6 +11,9 @@ function App() {
   const [filter, setFilter] = useState('all');
   const [newTaskPriority, setNewTaskPriority] = useState('medium');
   const [newTaskDeadline, setNewTaskDeadline] = useState('');
+  const [dragIndex, setDragIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
+  const listRef = useRef(null);
 
   useEffect(() => {
     localStorage.setItem('tasks', JSON.stringify(tasks));
@@ -26,17 +27,49 @@ function App() {
     return dueDate < today;
   };
 
-  const getSortedTasks = (taskList) => {
-    return [...taskList].sort((a, b) => {
-      return priorityOrder[a.priority] - priorityOrder[b.priority];
-    });
-  };
-
-  const filteredTasks = getSortedTasks(tasks.filter(task => {
+  const filteredTasks = tasks.filter(task => {
     if (filter === 'active') return !task.completed;
     if (filter === 'completed') return task.completed;
     return true;
-  }));
+  });
+
+  const handleDragStart = (index) => {
+    setDragIndex(index);
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    setDragOverIndex(y < rect.height / 2 ? index : index + 1);
+  };
+
+  const handleDragLeave = (e) => {
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setDragOverIndex(null);
+    }
+  };
+
+  const handleDrop = (insertAt) => {
+    if (dragIndex === null) { setDragOverIndex(null); return; }
+    const reordered = [...tasks];
+    const [moved] = reordered.splice(dragIndex, 1);
+    const adjusted = insertAt > dragIndex ? insertAt - 1 : insertAt;
+    reordered.splice(adjusted, 0, moved);
+    setTasks(reordered);
+    setDragIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDragIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleListDrop = () => {
+    if (dragIndex === null) return;
+    handleDrop(tasks.length);
+  };
 
   const incompleteCount = tasks.filter(t => !t.completed).length;
   const hasCompleted = tasks.some(t => t.completed);
@@ -114,16 +147,45 @@ function App() {
         <button className={`tab ${filter === 'completed' ? 'active' : ''}`} onClick={() => setFilter('completed')}>Completed</button>
       </div>
 
-      <div className="task-list">
+      <div
+        className="task-list"
+        ref={listRef}
+        onDragOver={(e) => { e.preventDefault(); dragIndex !== null && setDragOverIndex(tasks.length); }}
+        onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setDragOverIndex(null); }}
+        onDrop={handleListDrop}
+      >
         {filteredTasks.length === 0 ? (
           <div className="empty-state">
             {filter === 'all' ? 'No tasks yet. Add one above!' : `No ${filter} tasks`}
           </div>
         ) : (
           filteredTasks.map((task) => {
+            const taskIndex = tasks.indexOf(task);
             const overdue = !task.completed && isOverdue(task.deadline);
+            const isDragging = dragIndex === taskIndex;
+            const isDragOverTop = dragOverIndex === taskIndex;
+            const isDragOverBottom = dragOverIndex === taskIndex + 1;
             return (
-              <div key={task.id} className={`task ${task.completed ? 'completed' : ''} ${overdue ? 'overdue' : ''}`}>
+              <div
+                key={task.id}
+                className={`task ${task.completed ? 'completed' : ''} ${overdue ? 'overdue' : ''} ${isDragging ? 'dragging' : ''} ${isDragOverTop ? 'drag-over-top' : ''} ${isDragOverBottom ? 'drag-over-bottom' : ''}`}
+                draggable={false}
+                onDragOver={(e) => handleDragOver(e, taskIndex)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const y = e.clientY - rect.top;
+                  handleDrop(y < rect.height / 2 ? taskIndex : taskIndex + 1);
+                }}
+                onDragEnd={handleDragEnd}
+              >
+                <span
+                  className="drag-handle"
+                  draggable
+                  onDragStart={() => handleDragStart(taskIndex)}
+                >
+                  <svg viewBox="0 0 24 24"><path d="M8 6h2v2H8V6zm6 0h2v2h-2V6zM8 11h2v2H8v-2zm6 0h2v2h-2v-2zm-6 5h2v2H8v-2zm6 0h2v2h-2v-2z"/></svg>
+                </span>
                 <div className={`checkbox ${task.completed ? 'checked' : ''}`} onClick={() => toggleTask(task.id)}>
                   <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                 </div>
