@@ -5,7 +5,9 @@ const priorityOrder = { high: 0, medium: 1, low: 2 };
 function App() {
   const [tasks, setTasks] = useState(() => {
     const saved = localStorage.getItem('tasks');
-    return saved ? JSON.parse(saved) : [];
+    if (!saved) return [];
+    const parsed = JSON.parse(saved);
+    return parsed.map(t => t.id ? t : { ...t, id: Date.now() + Math.random() });
   });
   const [inputValue, setInputValue] = useState('');
   const [filter, setFilter] = useState('all');
@@ -43,6 +45,7 @@ function App() {
     const text = inputValue.trim();
     if (!text) return;
     setTasks([...tasks, {
+      id: Date.now() + Math.random(),
       text,
       completed: false,
       priority: newTaskPriority,
@@ -53,33 +56,12 @@ function App() {
     setNewTaskDeadline('');
   };
 
-  const toggleTask = (index) => {
-    const newTasks = [...tasks];
-    const taskIndex = tasks.findIndex((t, i) => {
-      const filtered = filteredTasks.filter(task => {
-        if (filter === 'active') return !task.completed;
-        if (filter === 'completed') return task.completed;
-        return true;
-      });
-      return i === tasks.indexOf(filtered[index]);
-    });
-
-    if (taskIndex !== -1) {
-      newTasks[taskIndex].completed = !newTasks[taskIndex].completed;
-      setTasks(newTasks);
-    }
+  const toggleTask = (id) => {
+    setTasks(tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
   };
 
-  const deleteTask = (index) => {
-    const filtered = filteredTasks.filter((_, i) => i !== index);
-    const remainingTasks = tasks.filter(task => {
-      if (filter === 'active') return !task.completed;
-      if (filter === 'completed') return task.completed;
-      return true;
-    });
-
-    const taskToRemove = filteredTasks[index];
-    setTasks(tasks.filter(t => t !== taskToRemove));
+  const deleteTask = (id) => {
+    setTasks(tasks.filter(t => t.id !== id));
   };
 
   const clearCompleted = () => {
@@ -138,11 +120,11 @@ function App() {
             {filter === 'all' ? 'No tasks yet. Add one above!' : `No ${filter} tasks`}
           </div>
         ) : (
-          filteredTasks.map((task, index) => {
+          filteredTasks.map((task) => {
             const overdue = !task.completed && isOverdue(task.deadline);
             return (
-              <div key={index} className={`task ${task.completed ? 'completed' : ''} ${overdue ? 'overdue' : ''}`}>
-                <div className={`checkbox ${task.completed ? 'checked' : ''}`} onClick={() => toggleTask(index)}>
+              <div key={task.id} className={`task ${task.completed ? 'completed' : ''} ${overdue ? 'overdue' : ''}`}>
+                <div className={`checkbox ${task.completed ? 'checked' : ''}`} onClick={() => toggleTask(task.id)}>
                   <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                 </div>
                 <span className={`priority-badge ${task.priority}`}>{task.priority}</span>
@@ -152,7 +134,7 @@ function App() {
                     {new Date(task.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </span>
                 )}
-                <button className="delete-btn" onClick={() => deleteTask(index)}>
+                <button className="delete-btn" onClick={() => deleteTask(task.id)}>
                   <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
                 </button>
               </div>
